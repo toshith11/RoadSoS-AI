@@ -1,4 +1,11 @@
 venv/
+<<<<<<< HEAD
 __pycache__/
 *.pyc
 uploads/
+=======
+.vscode/
+__pycache__/
+uploads/
+extracted_frames/
+>>>>>>> 4d4c463a835bfbb00133b7c977dea066386faaac
