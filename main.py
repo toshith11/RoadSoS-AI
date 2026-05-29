@@ -4,6 +4,7 @@ from routes.incident_routes import router as incident_router
 from routes.reward_routes import router as reward_router
 from routes.analysis_routes import router as analysis_router
 from routes.upload_routes import router as upload_router
+from routes.home_routes import router as home_router
 
 app = FastAPI(
     title="RoadSoS Backend",
@@ -21,3 +22,4 @@ app.include_router(incident_router)
 app.include_router(reward_router)
 app.include_router(analysis_router)
 app.include_router(upload_router)
+app.include_router(home_router)
