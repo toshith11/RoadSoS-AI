@@ -1,11 +1,39 @@
-venv/
-<<<<<<< HEAD
-__pycache__/
+# Miscellaneous
+*.class
+*.log
 *.pyc
-uploads/
-=======
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ / Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code
 .vscode/
-__pycache__/
-uploads/
-extracted_frames/
->>>>>>> 4d4c463a835bfbb00133b7c977dea066386faaac
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+
+# Android
+android/.gradle/
+android/app/build/
+
+# Generated
+*.lock
