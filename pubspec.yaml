@@ -13,19 +13,19 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
-  # 🌍 Location tracking (GPS)
+  # GPS
   geolocator: ^14.0.2
 
-  # 🔐 Permissions (camera, mic, location)
+  # Permissions
   permission_handler: ^12.0.1
 
-  # 📸 Camera (photo + video)
+  # Camera
   camera: ^0.11.2+1
 
-  # 🖼️ Optional image picker (you can keep or remove later)
+  # Image Picker
   image_picker: ^1.2.1
 
-  # 🎤 Audio/video recording helper (optional but ok for your module)
+  # Audio
   flutter_sound: ^9.30.0
 
 dev_dependencies:
