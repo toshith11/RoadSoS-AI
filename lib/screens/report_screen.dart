@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:geolocator/geolocator.dart';
 import 'analysis_screen.dart';
 import '../services/api_service.dart';
 
@@ -27,6 +28,7 @@ class _ReportScreenState extends State<ReportScreen> {
 
   XFile? recordedVideo;
   bool isSubmitting = false;
+  bool isLocationFetched = false;
 
   void showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -57,12 +59,39 @@ class _ReportScreenState extends State<ReportScreen> {
     }
   }
 
-  void fetchLocation() {
+  Future<void> fetchLocation() async {
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+    if (!serviceEnabled) {
+      showMessage("Please enable location services");
+      return;
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      showMessage("Location permission permanently denied");
+      return;
+    }
+
+    if (permission == LocationPermission.denied) {
+      showMessage("Location permission denied");
+      return;
+    }
+
+    final position = await Geolocator.getCurrentPosition();
+
     setState(() {
-      locationStatus = "Lat: 12.97160, Lng: 77.59460 ✓";
+      locationStatus =
+          "Lat: ${position.latitude.toStringAsFixed(5)}, Lng: ${position.longitude.toStringAsFixed(5)} ✓";
+      isLocationFetched = true;
     });
 
-    showMessage("Location fetched for demo");
+    showMessage("Location fetched successfully");
   }
 
   Future<void> submitReport() async {
@@ -76,7 +105,7 @@ class _ReportScreenState extends State<ReportScreen> {
       return;
     }
 
-    if (locationStatus == "Location not fetched yet") {
+    if (!isLocationFetched) {
       showMessage("Please fetch location");
       return;
     }
@@ -202,7 +231,9 @@ class _ReportScreenState extends State<ReportScreen> {
             const SizedBox(height: 12),
 
             ActionButton(
-              text: "Fetch Current Location",
+              text: isLocationFetched
+                  ? "Location Captured ✓"
+                  : "Fetch Current Location",
               icon: Icons.my_location_rounded,
               color: sage,
               onTap: fetchLocation,
