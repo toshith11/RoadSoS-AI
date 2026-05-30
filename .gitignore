@@ -1,3 +1,11 @@
+.vscode/
+venv/
+__pycache__/
+uploads/
+extracted_frames/
+.env
+yolov8n.pt
+check_models.py
 # Miscellaneous
 *.class
 *.log
