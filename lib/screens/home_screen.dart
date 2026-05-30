@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'sos_screen.dart';
 import 'report_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -50,7 +51,7 @@ class HomeScreen extends StatelessWidget {
                     'No login needed. Share location and request emergency help.',
                 icon: Icons.emergency_rounded,
                 iconColor: primaryRose,
-                iconBgColor: Color(0xFFF6E1E1),
+                iconBgColor: const Color(0xFFF6E1E1),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -69,15 +70,45 @@ class HomeScreen extends StatelessWidget {
                     'Record accident video, add details and let AI decide required services.',
                 icon: Icons.videocam_rounded,
                 iconColor: warmBrown,
-                iconBgColor: Color(0xFFEFE4DA),
-               onTap: () {
-                Navigator.push(
-                   context,
+                iconBgColor: const Color(0xFFEFE4DA),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ReportScreen(),
+                    ),
+                  );
+                },
+              ),
+
+              const SizedBox(height: 22),
+
+              SizedBox(
+                width: double.infinity,
+                height: 58,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
                       MaterialPageRoute(
-                        builder: (context) => const ReportScreen(),
-                     ),
+                        builder: (context) => const ProfileScreen(),
+                      ),
                     );
                   },
+                  icon: const Icon(Icons.person_rounded),
+                  label: const Text(
+                    "View Citizen Profile",
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD9A86C),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                  ),
+                ),
               ),
 
               const Spacer(),
@@ -150,9 +181,7 @@ class EmergencyCard extends StatelessWidget {
                 size: 36,
               ),
             ),
-
             const SizedBox(width: 20),
-
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,9 +194,7 @@ class EmergencyCard extends StatelessWidget {
                       color: darkText,
                     ),
                   ),
-
                   const SizedBox(height: 8),
-
                   Text(
                     subtitle,
                     style: const TextStyle(
