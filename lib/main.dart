@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
-import 'module2/gps_screen.dart';
+import 'screens/home_screen.dart';
 
 void main() {
-  runApp(const RoadSOS());
+  runApp(const RoadSoSApp());
 }
 
-class RoadSOS extends StatelessWidget {
-  const RoadSOS({super.key});
+class RoadSoSApp extends StatelessWidget {
+  const RoadSoSApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: "RoadSOS",
-      theme: ThemeData(primarySwatch: Colors.red),
-      home: const GPSScreen(),
+      title: 'RoadSoS',
+      home: const HomeScreen(),
     );
   }
 }

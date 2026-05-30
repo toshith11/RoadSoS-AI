@@ -15,10 +15,10 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   void initState() {
     super.initState();
-    _setupCamera();
+    initCamera();
   }
 
-  Future<void> _setupCamera() async {
+  Future<void> initCamera() async {
     final cameras = await availableCameras();
 
     _controller = CameraController(
@@ -31,22 +31,17 @@ class _CameraScreenState extends State<CameraScreen> {
     setState(() {});
   }
 
-  Future<void> _takePhoto() async {
-    if (_controller == null) return;
-
-    final image = await _controller!.takePicture();
-    debugPrint("📸 Photo saved: ${image.path}");
+  Future<void> takePhoto() async {
+    final file = await _controller!.takePicture();
+    debugPrint("PHOTO: ${file.path}");
   }
 
-  Future<void> _toggleVideo() async {
-    if (_controller == null) return;
-
+  Future<void> toggleVideo() async {
     if (_isRecording) {
-      final video = await _controller!.stopVideoRecording();
-      debugPrint("🎥 Video saved: ${video.path}");
+      final file = await _controller!.stopVideoRecording();
+      debugPrint("VIDEO: ${file.path}");
     } else {
       await _controller!.startVideoRecording();
-      debugPrint("🎥 Recording started");
     }
 
     setState(() {
@@ -63,39 +58,29 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   Widget build(BuildContext context) {
     if (_controller == null || !_controller!.value.isInitialized) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Camera Module (Photo + Video)")),
-
+      appBar: AppBar(title: const Text("Camera")),
       body: Column(
         children: [
           Expanded(child: CameraPreview(_controller!)),
 
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                FloatingActionButton(
-                  heroTag: "photo",
-                  onPressed: _takePhoto,
-                  child: const Icon(Icons.camera_alt),
-                ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              FloatingActionButton(
+                onPressed: takePhoto,
+                child: const Icon(Icons.camera_alt),
+              ),
 
-                FloatingActionButton(
-                  heroTag: "video",
-                  backgroundColor: _isRecording ? Colors.red : Colors.blue,
-                  onPressed: _toggleVideo,
-                  child: Icon(
-                    _isRecording ? Icons.stop : Icons.videocam,
-                  ),
-                ),
-              ],
-            ),
+              FloatingActionButton(
+                onPressed: toggleVideo,
+                backgroundColor: _isRecording ? Colors.red : Colors.blue,
+                child: Icon(_isRecording ? Icons.stop : Icons.videocam),
+              ),
+            ],
           )
         ],
       ),
