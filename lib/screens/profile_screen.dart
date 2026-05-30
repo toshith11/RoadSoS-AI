@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
   static const Color bgColor = Color(0xFFF7F4F2);
   static const Color rose = Color(0xFFD88C8C);
   static const Color blue = Color(0xFF7FA7C9);
@@ -11,11 +17,38 @@ class ProfileScreen extends StatelessWidget {
   static const Color darkText = Color(0xFF3F3A37);
   static const Color lightText = Color(0xFF8B817C);
 
+  int points = 150;
+  int reports = 3;
+  int verifiedReports = 2;
+
+  @override
+  void initState() {
+    super.initState();
+    loadProfileData();
+  }
+
+  Future<void> loadProfileData() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    setState(() {
+      points = prefs.getInt("citizen_points") ?? 0;
+      reports = prefs.getInt("reports_submitted") ?? 0;
+      verifiedReports = prefs.getInt("verified_reports") ?? 0;
+    });
+  }
+
+  String getLevel() {
+    if (points >= 1000) return "Emergency Hero";
+    if (points >= 500) return "Safety Champion";
+    if (points >= 300) return "Road Guardian";
+    if (points >= 100) return "Community Reporter";
+    return "Beginner Helper";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
-
       appBar: AppBar(
         backgroundColor: bgColor,
         elevation: 0,
@@ -28,12 +61,10 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
       ),
-
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(22),
         child: Column(
           children: [
-
             const CircleAvatar(
               radius: 50,
               backgroundColor: rose,
@@ -57,9 +88,9 @@ class ProfileScreen extends StatelessWidget {
 
             const SizedBox(height: 5),
 
-            const Text(
-              "Community Reporter",
-              style: TextStyle(
+            Text(
+              getLevel(),
+              style: const TextStyle(
                 color: lightText,
                 fontSize: 16,
               ),
@@ -69,7 +100,7 @@ class ProfileScreen extends StatelessWidget {
 
             _buildStatCard(
               "🏆 Total Points",
-              "150",
+              points.toString(),
               amber,
             ),
 
@@ -77,7 +108,7 @@ class ProfileScreen extends StatelessWidget {
 
             _buildStatCard(
               "📹 Reports Submitted",
-              "3",
+              reports.toString(),
               blue,
             ),
 
@@ -85,7 +116,7 @@ class ProfileScreen extends StatelessWidget {
 
             _buildStatCard(
               "🚨 Verified Reports",
-              "2",
+              verifiedReports.toString(),
               sage,
             ),
 
@@ -101,7 +132,6 @@ class ProfileScreen extends StatelessWidget {
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   Text(
                     "🎖️ Badges",
                     style: TextStyle(

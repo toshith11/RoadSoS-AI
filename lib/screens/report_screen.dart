@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'analysis_screen.dart';
 import '../services/api_service.dart';
 
@@ -126,7 +128,17 @@ class _ReportScreenState extends State<ReportScreen> {
     });
 
     if (response["success"] == true) {
-      showMessage("Report submitted successfully");
+      final prefs = await SharedPreferences.getInstance();
+
+      final currentPoints = prefs.getInt("citizen_points") ?? 0;
+      final currentReports = prefs.getInt("reports_submitted") ?? 0;
+      final currentVerified = prefs.getInt("verified_reports") ?? 0;
+
+      await prefs.setInt("citizen_points", currentPoints + 50);
+      await prefs.setInt("reports_submitted", currentReports + 1);
+      await prefs.setInt("verified_reports", currentVerified + 1);
+
+      showMessage("Report submitted successfully! +50 Points");
 
       Navigator.push(
         context,
@@ -170,9 +182,7 @@ class _ReportScreenState extends State<ReportScreen> {
               "Record accident video, add comments, and share location for AI analysis.",
               style: TextStyle(fontSize: 16, color: lightText),
             ),
-
             const SizedBox(height: 25),
-
             ReportCard(
               icon: Icons.videocam_rounded,
               title: "Accident Video",
@@ -180,18 +190,14 @@ class _ReportScreenState extends State<ReportScreen> {
               iconColor: rose,
               iconBgColor: const Color(0xFFF6E1E1),
             ),
-
             const SizedBox(height: 12),
-
             ActionButton(
               text: "Allow Camera & Record Video",
               icon: Icons.videocam_rounded,
               color: blue,
               onTap: recordVideo,
             ),
-
             const SizedBox(height: 25),
-
             const Text(
               "Accident Description",
               style: TextStyle(
@@ -200,9 +206,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 color: darkText,
               ),
             ),
-
             const SizedBox(height: 10),
-
             TextField(
               controller: descriptionController,
               maxLines: 5,
@@ -217,9 +221,7 @@ class _ReportScreenState extends State<ReportScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 25),
-
             ReportCard(
               icon: Icons.location_on_rounded,
               title: "Accident Location",
@@ -227,9 +229,7 @@ class _ReportScreenState extends State<ReportScreen> {
               iconColor: sage,
               iconBgColor: const Color(0xFFE8F1EB),
             ),
-
             const SizedBox(height: 12),
-
             ActionButton(
               text: isLocationFetched
                   ? "Location Captured ✓"
@@ -238,16 +238,12 @@ class _ReportScreenState extends State<ReportScreen> {
               color: sage,
               onTap: fetchLocation,
             ),
-
             const SizedBox(height: 35),
-
             if (isSubmitting)
               const Center(
                 child: CircularProgressIndicator(),
               ),
-
             if (isSubmitting) const SizedBox(height: 20),
-
             ActionButton(
               text: isSubmitting ? "Submitting..." : "Submit Accident Report",
               icon: Icons.send_rounded,
