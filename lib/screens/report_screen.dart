@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'analysis_screen.dart';
+import '../services/api_service.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -16,10 +18,15 @@ class _ReportScreenState extends State<ReportScreen> {
   static const Color darkText = Color(0xFF3F3A37);
   static const Color lightText = Color(0xFF8B817C);
 
+  final ApiService apiService = ApiService();
+  final ImagePicker picker = ImagePicker();
   final TextEditingController descriptionController = TextEditingController();
 
-  String videoStatus = "No video selected";
+  String videoStatus = "No video recorded yet";
   String locationStatus = "Location not fetched yet";
+
+  XFile? recordedVideo;
+  bool isSubmitting = false;
 
   void showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -27,23 +34,40 @@ class _ReportScreenState extends State<ReportScreen> {
     );
   }
 
-  void selectVideo() {
-    setState(() {
-      videoStatus = "accident_video.mp4 selected";
-    });
-    showMessage("Video selected for demo");
+  Future<void> recordVideo() async {
+    try {
+      final XFile? video = await picker.pickVideo(
+        source: ImageSource.camera,
+        maxDuration: const Duration(seconds: 30),
+      );
+
+      if (video == null) {
+        showMessage("Video recording cancelled");
+        return;
+      }
+
+      setState(() {
+        recordedVideo = video;
+        videoStatus = "Video recorded successfully ✓";
+      });
+
+      showMessage("Video recorded successfully");
+    } catch (e) {
+      showMessage("Camera access failed or not supported on this device");
+    }
   }
 
   void fetchLocation() {
     setState(() {
-      locationStatus = "Lat: 12.97160, Lng: 77.59460";
+      locationStatus = "Lat: 12.97160, Lng: 77.59460 ✓";
     });
+
     showMessage("Location fetched for demo");
   }
 
-  void submitReport() {
-    if (videoStatus == "No video selected") {
-      showMessage("Please upload accident video");
+  Future<void> submitReport() async {
+    if (recordedVideo == null) {
+      showMessage("Please record accident video first");
       return;
     }
 
@@ -57,12 +81,39 @@ class _ReportScreenState extends State<ReportScreen> {
       return;
     }
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const AnalysisScreen(),
-      ),
+    setState(() {
+      isSubmitting = true;
+    });
+
+    showMessage("Submitting accident report...");
+
+    final response = await apiService.submitAccidentReport(
+      description: descriptionController.text.trim(),
+      location: locationStatus,
     );
+
+    setState(() {
+      isSubmitting = false;
+    });
+
+    if (response["success"] == true) {
+      showMessage("Report submitted successfully");
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AnalysisScreen(),
+        ),
+      );
+    } else {
+      showMessage("Failed to submit report");
+    }
+  }
+
+  @override
+  void dispose() {
+    descriptionController.dispose();
+    super.dispose();
   }
 
   @override
@@ -87,7 +138,7 @@ class _ReportScreenState extends State<ReportScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Upload video, add comments, and share location for AI analysis.",
+              "Record accident video, add comments, and share location for AI analysis.",
               style: TextStyle(fontSize: 16, color: lightText),
             ),
 
@@ -104,10 +155,10 @@ class _ReportScreenState extends State<ReportScreen> {
             const SizedBox(height: 12),
 
             ActionButton(
-              text: "Upload / Record Video",
-              icon: Icons.video_call_rounded,
+              text: "Allow Camera & Record Video",
+              icon: Icons.videocam_rounded,
               color: blue,
-              onTap: selectVideo,
+              onTap: recordVideo,
             ),
 
             const SizedBox(height: 25),
@@ -159,11 +210,18 @@ class _ReportScreenState extends State<ReportScreen> {
 
             const SizedBox(height: 35),
 
+            if (isSubmitting)
+              const Center(
+                child: CircularProgressIndicator(),
+              ),
+
+            if (isSubmitting) const SizedBox(height: 20),
+
             ActionButton(
-              text: "Submit Accident Report",
+              text: isSubmitting ? "Submitting..." : "Submit Accident Report",
               icon: Icons.send_rounded,
               color: rose,
-              onTap: submitReport,
+              onTap: isSubmitting ? () {} : submitReport,
             ),
           ],
         ),
