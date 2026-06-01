@@ -1,44 +1,59 @@
-class ApiService {
-  Future<Map<String, dynamic>> sendSOSRequest({
-    required String location,
-    required String phone,
-    required String service,
-  }) async {
-    await Future.delayed(const Duration(seconds: 2));
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
-    return {
-      "success": true,
-      "message": "$service request sent successfully",
-      "eta": "7 minutes",
-    };
-  }
+class ApiService {
+
+  static const String baseUrl =
+      "http://192.168.1.20:8000";
 
   Future<Map<String, dynamic>> submitAccidentReport({
+    required String reporterName,
     required String description,
-    required String location,
+    required String videoPath,
+    required double latitude,
+    required double longitude,
   }) async {
-    await Future.delayed(const Duration(seconds: 3));
 
-    return {
-      "success": true,
-      "severity": "High",
-      "victims": 2,
-      "services": [
-        "Ambulance",
-        "Police",
-      ],
-    };
-  }
+    var request = http.MultipartRequest(
+      "POST",
+      Uri.parse("$baseUrl/processIncident"),
+    );
 
-  Future<Map<String, dynamic>> getCitizenProfile() async {
-    await Future.delayed(const Duration(seconds: 1));
+    request.fields["reporter_name"] = reporterName;
 
-    return {
-      "name": "Citizen Reporter",
-      "points": 150,
-      "level": "Community Reporter",
-      "reports": 3,
-      "verifiedReports": 2,
-    };
+    request.fields["latitude"] =
+        latitude.toString();
+
+    request.fields["longitude"] =
+        longitude.toString();
+
+    request.fields["description"] =
+        description;
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        "video",
+        videoPath,
+      ),
+    );
+
+    final streamedResponse =
+        await request.send();
+
+    final response =
+        await http.Response.fromStream(
+          streamedResponse,
+        );
+
+    if (response.statusCode == 200) {
+
+      return jsonDecode(response.body);
+
+    } else {
+
+      return {
+        "success": false
+      };
+    }
   }
 }
