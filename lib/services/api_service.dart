@@ -3,8 +3,13 @@ import 'package:http/http.dart' as http;
 
 class ApiService {
 
+  // Replace with your backend IP
   static const String baseUrl =
-      "http://192.168.1.20:8000";
+"http://172.25.63.22:8000";
+
+  // ==========================
+  // SUBMIT ACCIDENT REPORT
+  // ==========================
 
   Future<Map<String, dynamic>> submitAccidentReport({
     required String reporterName,
@@ -14,45 +19,154 @@ class ApiService {
     required double longitude,
   }) async {
 
-    var request = http.MultipartRequest(
-      "POST",
-      Uri.parse("$baseUrl/processIncident"),
-    );
+    try {
 
-    request.fields["reporter_name"] = reporterName;
+      var request = http.MultipartRequest(
+        "POST",
+        Uri.parse("$baseUrl/processIncident"),
+      );
 
-    request.fields["latitude"] =
-        latitude.toString();
+      request.fields["reporter_name"] = reporterName;
 
-    request.fields["longitude"] =
-        longitude.toString();
+      request.fields["latitude"] =
+          latitude.toString();
 
-    request.fields["description"] =
-        description;
+      request.fields["longitude"] =
+          longitude.toString();
 
-    request.files.add(
-      await http.MultipartFile.fromPath(
-        "video",
-        videoPath,
-      ),
-    );
+      request.fields["description"] =
+          description;
 
-    final streamedResponse =
-        await request.send();
+      request.files.add(
+        await http.MultipartFile.fromPath(
+          "video",
+          videoPath,
+        ),
+      );
 
-    final response =
-        await http.Response.fromStream(
-          streamedResponse,
-        );
+      final streamedResponse =
+          await request.send();
 
-    if (response.statusCode == 200) {
+      final response =
+          await http.Response.fromStream(
+            streamedResponse,
+          );
+
+      if (response.statusCode == 200) {
+
+        return jsonDecode(response.body);
+
+      } else {
+
+        return {
+          "success": false,
+          "message":
+              "Failed with status ${response.statusCode}"
+        };
+      }
+
+    } catch (e) {
+
+      return {
+        "success": false,
+        "message": e.toString()
+      };
+    }
+  }
+
+  // ==========================
+  // INCIDENT HISTORY
+  // ==========================
+
+  Future<List<dynamic>> getIncidentHistory() async {
+
+    try {
+
+      final response = await http.get(
+        Uri.parse(
+          "$baseUrl/incidentHistory",
+        ),
+      );
+
+      if (response.statusCode == 200) {
+
+        return jsonDecode(response.body);
+
+      } else {
+
+        return [];
+      }
+
+    } catch (e) {
+
+      return [];
+    }
+  }
+
+  // ==========================
+  // LATEST INCIDENT
+  // ==========================
+
+  Future<Map<String, dynamic>> getLatestIncident() async {
+
+    try {
+
+      final response = await http.get(
+        Uri.parse(
+          "$baseUrl/latestIncident",
+        ),
+      );
+
+      if (response.statusCode == 200) {
+
+        return jsonDecode(response.body);
+
+      } else {
+
+        return {
+          "message":
+              "Failed to fetch latest incident"
+        };
+      }
+
+    } catch (e) {
+
+      return {
+        "message": e.toString()
+      };
+    }
+  }
+
+  // ==========================
+  // SOS API (Future)
+  // ==========================
+
+  Future<Map<String, dynamic>> sendSOS({
+    required double latitude,
+    required double longitude,
+  }) async {
+
+    try {
+
+      final response = await http.post(
+        Uri.parse("$baseUrl/sos"),
+        headers: {
+          "Content-Type":
+              "application/json"
+        },
+        body: jsonEncode({
+          "latitude": latitude,
+          "longitude": longitude,
+        }),
+      );
 
       return jsonDecode(response.body);
 
-    } else {
+    } catch (e) {
 
       return {
-        "success": false
+        "success": false,
+        "message": e.toString()
       };
     }
   }
