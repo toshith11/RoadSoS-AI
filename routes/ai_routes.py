@@ -1,10 +1,14 @@
 from fastapi import APIRouter, UploadFile, File, Form
 import requests
+
 from data.storage import incidents
+from services.recommendation_service import get_recommendations
+from services.severity_booster import boost_severity
 
 router = APIRouter()
 
 AI_ENGINE_URL = "http://127.0.0.1:8001/analyze"
+
 
 @router.post("/processIncident")
 async def process_incident(
@@ -27,72 +31,90 @@ async def process_incident(
         "description": description
     }
 
-    ai_result = {
-    "filename": video.filename,
-    "description": description,
-    "frames_extracted": 22,
-    "object_counts": {
-        "car": 10
-    },
-    "evidence_score": 100,
-    "severity": "Critical",
-    "recommended_services": [
-        "Police",
-        "Ambulance"
-    ],
+    response = requests.post(
+        AI_ENGINE_URL,
+        files=files,
+        data=data
+    )
 
-    "nearest_hospital": {
-        "name": "Trauma Center",
-        "distance": "1.5 km"
-    },
+    if response.status_code != 200:
+        return {
+            "success": False,
+            "message": "AI Engine Failed"
+        }
 
-    "nearest_police_station": {
-        "name": "Central Police Station",
-        "distance": "2 km"
-    },
+    ai_result = response.json()
 
-    "nearest_ambulance": {
-        "ambulance_id": "AMB-101",
-        "distance": "1 km"
-    },
+    # AI severity
+    original_severity = ai_result["severity"]
 
-    "llm_analysis": "Test analysis"
-}
+    # Boost severity using description
+    final_severity = boost_severity(
+        original_severity,
+        description
+    )
+
+    # Get recommendations
+    recommendation_data = get_recommendations(
+        final_severity,
+        latitude,
+        longitude
+    )
 
     incident = {
 
-    "reporter_name": reporter_name,
+        "reporter_name": reporter_name,
 
-    "latitude": latitude,
-    "longitude": longitude,
+        "latitude": latitude,
+        "longitude": longitude,
 
-    "filename": ai_result["filename"],
+        "filename": ai_result["filename"],
 
-    "description": ai_result["description"],
+        "description": ai_result["description"],
 
-    "frames_extracted": ai_result["frames_extracted"],
+        "frames_extracted":
+            ai_result["frames_extracted"],
 
-    "object_counts": ai_result["object_counts"],
+        "predictions":
+            ai_result["predictions"],
 
-    "evidence_score": ai_result["evidence_score"],
+        "final_category":
+            ai_result["final_category"],
 
-    "severity": ai_result["severity"],
+        "prediction_scores":
+            ai_result["prediction_scores"],
 
-    "recommended_services": ai_result["recommended_services"],
+        "severity":
+            final_severity,
 
-    "nearest_hospital": ai_result.get("nearest_hospital"),
+        "recommended_services":
+            recommendation_data["recommended_services"],
 
-    "nearest_police_station": ai_result.get("nearest_police_station"),
+        "nearest_hospital":
+            recommendation_data.get(
+                "nearest_hospital"
+            ),
 
-    "nearest_ambulance": ai_result.get("nearest_ambulance"),
+        "nearest_police_station":
+            recommendation_data.get(
+                "nearest_police_station"
+            ),
 
-    "llm_analysis": ai_result["llm_analysis"]
+        "nearest_fire_station":
+            recommendation_data.get(
+                "nearest_fire_station"
+            ),
+
+        "nearest_trauma_center":
+            recommendation_data.get(
+                "nearest_trauma_center"
+            )
     }
-
-    print("Before save:", incidents)
 
     incidents.append(incident)
 
-    print("After save:", incidents)
+    print("\n========== NEW INCIDENT ==========")
+    print(incident)
+    print("==================================\n")
 
     return incident

@@ -6,15 +6,27 @@ router = APIRouter()
 @router.post("/analyzeSeverity")
 def analyze_severity(incident: Incident):
 
-    if incident.severity.lower() == "high":
-        response = "Ambulance + Police"
+    if incident.severity == "Critical":
 
-    elif incident.severity.lower() == "medium":
-        response = "Nearest Hospital"
+        response = [
+            "Police",
+            "Ambulance",
+            "Fire Brigade"
+            ]
+
+    elif incident.severity == "High":
+
+        response = [
+        "Police",
+        "Ambulance"
+        ]
+
+    elif incident.severity == "Medium":
+
+        response = [
+        "Ambulance"
+        ]
 
     else:
-        response = "Minor Assistance"
 
-    return {
-        "required_response": response
-    }
+        response = []
