@@ -2,7 +2,8 @@ import requests
 from geopy.distance import geodesic
 from services.db_service import get_nearest
 
-OVERPASS_URL = "https://overpass.kumi.systems/api/interpreter"
+OVERPASS_URL = OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+
 
 
 def find_nearest_firestation(lat, lon):

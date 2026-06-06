@@ -2,7 +2,7 @@ import requests
 from geopy.distance import geodesic
 from services.db_service import get_nearest
 
-OVERPASS_URL = "https://overpass.kumi.systems/api/interpreter"
+OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
 
 def find_nearest_hospital(lat, lon):
@@ -12,12 +12,12 @@ def find_nearest_hospital(lat, lon):
     node["amenity"="hospital"](around:5000,{lat},{lon});
     out body;
     """
-
+    print("Searching hospital from OpenStreetMap...")
     try:
         response = requests.post(
             OVERPASS_URL,
             data=query,
-            timeout=10
+            timeout=30
         )
 
         data = response.json()
