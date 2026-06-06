@@ -1,12 +1,13 @@
-def calculate_severity(predictions):
+def calculate_severity(category):
 
-    if "vehicle on fire" in predictions:
+    if category == "vehicle on fire":
         return "Critical"
 
-    if "major vehicle accident" in predictions:
+    elif category == "major vehicle accident":
         return "High"
 
-    if "minor vehicle accident" in predictions:
+    elif category == "minor vehicle accident":
         return "Medium"
 
-    return "Low"
+    else:
+        return "Low"

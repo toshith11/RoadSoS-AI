@@ -1,9 +1,13 @@
 from fastapi import FastAPI, UploadFile, File, Form
 import os
+from services.video_analysis import extract_frames
 
-from video_analysis import extract_frames
-from clip_classifier import classify_image
-from severity_engine import calculate_severity
+from models.clip_classifier import classify_image
+
+from models.severity_engine import calculate_severity
+
+from aggregation_engine import get_final_category
+from models.severity_engine import calculate_severity
 
 app = FastAPI()
 
@@ -42,28 +46,40 @@ async def analyze(
 
     for frame in frames:
 
-        prediction = classify_image(frame)
+        result = classify_image(frame)
 
-        predictions.append(prediction)
+        predictions.append(result)
 
-    # Calculate severity
-    severity = calculate_severity(predictions)
+# Count category scores using confidence
+    prediction_scores = {}
 
-    # Count prediction occurrences
-    prediction_counts = {}
+    for result in predictions:
 
-    for prediction in predictions:
+        category = result["category"]
+        confidence = result["confidence"]
 
-        if prediction not in prediction_counts:
-            prediction_counts[prediction] = 0
+        if category not in prediction_scores:
+            prediction_scores[category] = 0
 
-        prediction_counts[prediction] += 1
+        prediction_scores[category] += confidence
+
+# Get final category
+    final_category = max(
+        prediction_scores,
+        key=prediction_scores.get
+        )
+
+# Get severity
+    severity = calculate_severity(
+        final_category
+    )
 
     return {
         "filename": video.filename,
         "description": description,
         "frames_extracted": len(frames),
         "predictions": predictions,
-        "prediction_counts": prediction_counts,
+        "final_category": final_category,
+        "prediction_scores": prediction_scores,
         "severity": severity
-    }
+        }

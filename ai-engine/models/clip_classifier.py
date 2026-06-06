@@ -3,8 +3,6 @@ from transformers import CLIPModel
 
 from PIL import Image
 
-import torch
-
 model = CLIPModel.from_pretrained(
     "openai/clip-vit-base-patch32"
 )
@@ -13,12 +11,37 @@ processor = CLIPProcessor.from_pretrained(
     "openai/clip-vit-base-patch32"
 )
 
-labels = [
+NORMAL = [
     "normal traffic",
-    "minor vehicle accident",
-    "major vehicle accident",
-    "vehicle on fire"
+    "vehicles moving on road",
+    "cars driving safely"
 ]
+
+MINOR = [
+    "small vehicle accident",
+    "vehicle with dents",
+    "minor collision damage"
+]
+
+MAJOR = [
+    "major road accident",
+    "heavily damaged vehicle",
+    "serious vehicle collision"
+]
+
+FIRE = [
+    "car on fire",
+    "vehicle burning",
+    "road accident with flames"
+]
+
+labels = (
+    NORMAL +
+    MINOR +
+    MAJOR +
+    FIRE
+)
+
 
 def classify_image(image_path):
 
@@ -37,8 +60,28 @@ def classify_image(image_path):
 
     probs = logits.softmax(dim=1)
 
-    prediction = labels[
-        probs.argmax().item()
-    ]
+    best_index = probs.argmax().item()
 
-    return prediction
+    best_label = labels[best_index]
+
+    confidence = probs[0][best_index].item()
+
+    if best_label in NORMAL:
+        category = "normal traffic"
+
+    elif best_label in MINOR:
+        category = "minor vehicle accident"
+
+    elif best_label in MAJOR:
+        category = "major vehicle accident"
+
+    elif best_label in FIRE:
+        category = "vehicle on fire"
+
+    else:
+        category = "unknown"
+
+    return {
+        "category": category,
+        "confidence": confidence
+        }
