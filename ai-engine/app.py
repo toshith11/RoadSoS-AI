@@ -41,6 +41,11 @@ async def analyze(
     # Extract frames
     frames = extract_frames(video_path)
 
+    thumbnail = None
+
+    if len(frames) > 0:
+        thumbnail = frames[0]
+
     # Analyze frames
     predictions = []
 
@@ -81,5 +86,6 @@ async def analyze(
         "predictions": predictions,
         "final_category": final_category,
         "prediction_scores": prediction_scores,
-        "severity": severity
+        "severity": severity,
+        "thumbnail": f"ai-engine/{frames[0]}"
         }

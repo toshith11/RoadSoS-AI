@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-
+from fastapi.responses import FileResponse
 from routes.incident_routes import router as incident_router
 from routes.reward_routes import router as reward_router
 from routes.analysis_routes import router as analysis_router
@@ -8,6 +8,8 @@ from routes.home_routes import router as home_router
 from routes.ai_routes import router as ai_router
 from routes.history_routes import router as history_router
 from routes.latest_incident_routes import router as latest_incident_router
+from routes.help_routes import router as help_router
+from routes.sos_routes import router as sos_router
 
 app = FastAPI(
     title="RoadSoS Backend",
@@ -34,3 +36,9 @@ app.include_router(home_router)
 app.include_router(ai_router)
 app.include_router(history_router)
 app.include_router(latest_incident_router)
+app.include_router(help_router)
+app.include_router(sos_router)
+@app.get("/thumbnail")
+def get_thumbnail(path: str):
+
+    return FileResponse(path)
