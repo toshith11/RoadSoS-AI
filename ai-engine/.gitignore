@@ -1,0 +1,9 @@
+venv/
+venv_ai/
+env/
+.venv/
+__pycache__/
+*.pyc
+uploads/
+frames/
+dataset/

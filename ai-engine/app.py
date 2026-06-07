@@ -1,10 +1,13 @@
 from fastapi import FastAPI, UploadFile, File, Form
-from ai.llm_engine import analyze_emergency
 import os
+from services.video_analysis import extract_frames
 
-from ai.video_analysis import extract_frames, detect_objects
-from ai.severity_engine import predict_severity
-from ai.recommendation_engine import recommend_services
+from models.clip_classifier import classify_image
+
+from models.severity_engine import calculate_severity
+
+from aggregation_engine import get_final_category
+from models.severity_engine import calculate_severity
 
 app = FastAPI()
 
@@ -15,53 +18,68 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.get("/")
 def home():
-    return {"message": "AI Engine Running"}
+    return {
+        "message": "RoadSOS AI Engine Running"
+    }
 
 
 @app.post("/analyze")
-async def analyze_incident(
+async def analyze(
     video: UploadFile = File(...),
     description: str = Form(...)
 ):
 
     # Save uploaded video
-    file_path = f"{UPLOAD_FOLDER}/{video.filename}"
+    video_path = os.path.join(
+        UPLOAD_FOLDER,
+        video.filename
+    )
 
-    with open(file_path, "wb") as buffer:
+    with open(video_path, "wb") as buffer:
         buffer.write(await video.read())
 
     # Extract frames
-    total_frames = extract_frames(file_path)
+    frames = extract_frames(video_path)
 
-    # Detect objects
-    detected_objects = detect_objects()
+    # Analyze frames
+    predictions = []
 
-    # Predict severity
-    severity = predict_severity(
-        description,
-        detected_objects
-    )
+    for frame in frames:
 
-    # Emergency recommendation
-    recommended_services = recommend_services(
-        severity,
-        detected_objects,
-        description
-    )
+        result = classify_image(frame)
 
-    # Gemini AI Analysis
-    llm_analysis = analyze_emergency(
-        description,
-        detected_objects
+        predictions.append(result)
+
+# Count category scores using confidence
+    prediction_scores = {}
+
+    for result in predictions:
+
+        category = result["category"]
+        confidence = result["confidence"]
+
+        if category not in prediction_scores:
+            prediction_scores[category] = 0
+
+        prediction_scores[category] += confidence
+
+# Get final category
+    final_category = max(
+        prediction_scores,
+        key=prediction_scores.get
+        )
+
+# Get severity
+    severity = calculate_severity(
+        final_category
     )
 
     return {
-        "message": "Analysis completed",
         "filename": video.filename,
         "description": description,
-        "frames_extracted": total_frames,
-        "detected_objects": detected_objects,
-        "severity": severity,
-        "recommended_services": recommended_services,
-        "llm_analysis": llm_analysis
-    }
+        "frames_extracted": len(frames),
+        "predictions": predictions,
+        "final_category": final_category,
+        "prediction_scores": prediction_scores,
+        "severity": severity
+        }

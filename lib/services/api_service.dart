@@ -2,43 +2,14 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String baseUrl = "http://172.25.63.22:8000";
 
-  Future<Map<String, dynamic>> sendSOSRequest({
-    required String location,
-    required String phone,
-    required String service,
-  }) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/sos"),
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: jsonEncode({
-          "location": location,
-          "phone": phone,
-          "service": service,
-        }),
-      );
+  // Replace with your backend IP
+  static const String baseUrl =
+"http://172.25.63.22:8000";
 
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
-
-      return {
-        "success": false,
-        "message": "SOS failed with status ${response.statusCode}",
-        "eta": "Not available",
-      };
-    } catch (e) {
-      return {
-        "success": false,
-        "message": "Backend connection failed",
-        "eta": "Not available",
-      };
-    }
-  }
+  // ==========================
+  // SUBMIT ACCIDENT REPORT
+  // ==========================
 
   Future<Map<String, dynamic>> submitAccidentReport({
     required String reporterName,
@@ -47,16 +18,24 @@ class ApiService {
     required double latitude,
     required double longitude,
   }) async {
+
     try {
-      final request = http.MultipartRequest(
+
+      var request = http.MultipartRequest(
         "POST",
         Uri.parse("$baseUrl/processIncident"),
       );
 
       request.fields["reporter_name"] = reporterName;
-      request.fields["description"] = description;
-      request.fields["latitude"] = latitude.toString();
-      request.fields["longitude"] = longitude.toString();
+
+      request.fields["latitude"] =
+          latitude.toString();
+
+      request.fields["longitude"] =
+          longitude.toString();
+
+      request.fields["description"] =
+          description;
 
       request.files.add(
         await http.MultipartFile.fromPath(
@@ -65,70 +44,130 @@ class ApiService {
         ),
       );
 
-      final streamedResponse = await request.send();
-      final response = await http.Response.fromStream(streamedResponse);
+      final streamedResponse =
+          await request.send();
+
+      final response =
+          await http.Response.fromStream(
+            streamedResponse,
+          );
 
       if (response.statusCode == 200) {
+
         return jsonDecode(response.body);
+
+      } else {
+
+        return {
+          "success": false,
+          "message":
+              "Failed with status ${response.statusCode}"
+        };
       }
+
+    } catch (e) {
 
       return {
         "success": false,
-        "message": "Report failed with status ${response.statusCode}",
-      };
-    } catch (e) {
-      return {
-        "success": false,
-        "message": "Backend connection failed: $e",
+        "message": e.toString()
       };
     }
   }
+
+  // ==========================
+  // INCIDENT HISTORY
+  // ==========================
 
   Future<List<dynamic>> getIncidentHistory() async {
+
     try {
+
       final response = await http.get(
-        Uri.parse("$baseUrl/incidentHistory"),
+        Uri.parse(
+          "$baseUrl/incidentHistory",
+        ),
       );
 
       if (response.statusCode == 200) {
+
         return jsonDecode(response.body);
+
+      } else {
+
+        return [];
       }
 
-      return [];
     } catch (e) {
+
       return [];
     }
   }
+
+  // ==========================
+  // LATEST INCIDENT
+  // ==========================
 
   Future<Map<String, dynamic>> getLatestIncident() async {
+
     try {
+
       final response = await http.get(
-        Uri.parse("$baseUrl/latestIncident"),
+        Uri.parse(
+          "$baseUrl/latestIncident",
+        ),
       );
 
       if (response.statusCode == 200) {
+
         return jsonDecode(response.body);
+
+      } else {
+
+        return {
+          "message":
+              "Failed to fetch latest incident"
+        };
       }
 
-      return {
-        "success": false,
-        "message": "Failed to fetch latest incident",
-      };
     } catch (e) {
+
       return {
-        "success": false,
-        "message": "Backend connection failed: $e",
+        "message": e.toString()
       };
     }
   }
 
-  Future<Map<String, dynamic>> getCitizenProfile() async {
-    return {
-      "name": "Citizen Reporter",
-      "points": 0,
-      "level": "Beginner Helper",
-      "reports": 0,
-      "verifiedReports": 0,
-    };
+  // ==========================
+  // SOS API (Future)
+  // ==========================
+
+  Future<Map<String, dynamic>> sendSOS({
+    required double latitude,
+    required double longitude,
+  }) async {
+
+    try {
+
+      final response = await http.post(
+        Uri.parse("$baseUrl/sos"),
+        headers: {
+          "Content-Type":
+              "application/json"
+        },
+        body: jsonEncode({
+          "latitude": latitude,
+          "longitude": longitude,
+        }),
+      );
+
+      return jsonDecode(response.body);
+
+    } catch (e) {
+
+      return {
+        "success": false,
+        "message": e.toString()
+      };
+    }
   }
 }

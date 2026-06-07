@@ -1,0 +1,16 @@
+severity,resource
+LOW,Police
+LOW,Police
+LOW,Police
+
+MEDIUM,Hospital Police
+MEDIUM,Hospital Police
+MEDIUM,Hospital Police
+
+HIGH,Hospital Police Fire
+HIGH,Hospital Police Fire
+HIGH,Hospital Police Fire
+
+CRITICAL,Hospital Police Fire Ambulance Trauma
+CRITICAL,Hospital Police Fire Ambulance Trauma
+CRITICAL,Hospital Police Fire Ambulance Trauma

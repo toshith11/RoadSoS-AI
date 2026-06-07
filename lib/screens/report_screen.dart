@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'analysis_screen.dart';
 import '../services/api_service.dart';
+double? latitude;
+double? longitude;
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -89,6 +91,9 @@ class _ReportScreenState extends State<ReportScreen> {
 
     final position = await Geolocator.getCurrentPosition();
 
+    latitude = position.latitude;
+    longitude = position.longitude;
+
     setState(() {
   latitude = position.latitude;
   longitude = position.longitude;
@@ -132,6 +137,12 @@ class _ReportScreenState extends State<ReportScreen> {
   longitude: longitude!,
 );
 print(response);
+    reporterName: "Citizen",
+    description: descriptionController.text.trim(),
+    videoPath: recordedVideo!.path,
+    latitude: latitude!,
+    longitude: longitude!,
+    );
 
     setState(() {
       isSubmitting = false;
@@ -151,10 +162,12 @@ print(response);
       showMessage("Report submitted successfully! +50 Points");
 
       Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const AnalysisScreen(),
-        ),
+  context,
+  MaterialPageRoute(
+    builder: (context) => AnalysisScreen(
+      analysisData: response,
+    ),
+  ),
       );
     } else {
       showMessage("Failed to submit report");

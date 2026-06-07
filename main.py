@@ -20,6 +20,11 @@ def home():
     return {
         "message": "RoadSoS Backend Running Successfully"
     }
+@app.get("/health")
+def health():
+    return {
+        "status": "Backend Connected Successfully"
+    }
 
 app.include_router(incident_router)
 app.include_router(reward_router)
