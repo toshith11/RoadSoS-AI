@@ -31,6 +31,8 @@ class _ReportScreenState extends State<ReportScreen> {
   XFile? recordedVideo;
   bool isSubmitting = false;
   bool isLocationFetched = false;
+  double? latitude;
+  double? longitude;
 
   void showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -88,10 +90,14 @@ class _ReportScreenState extends State<ReportScreen> {
     final position = await Geolocator.getCurrentPosition();
 
     setState(() {
-      locationStatus =
-          "Lat: ${position.latitude.toStringAsFixed(5)}, Lng: ${position.longitude.toStringAsFixed(5)} ✓";
-      isLocationFetched = true;
-    });
+  latitude = position.latitude;
+  longitude = position.longitude;
+
+  locationStatus =
+      "Lat: ${position.latitude.toStringAsFixed(5)}, Lng: ${position.longitude.toStringAsFixed(5)} ✓";
+
+  isLocationFetched = true;
+  });
 
     showMessage("Location fetched successfully");
   }
@@ -119,9 +125,13 @@ class _ReportScreenState extends State<ReportScreen> {
     showMessage("Submitting accident report...");
 
     final response = await apiService.submitAccidentReport(
-      description: descriptionController.text.trim(),
-      location: locationStatus,
-    );
+  reporterName: "Citizen Reporter",
+  description: descriptionController.text.trim(),
+  videoPath: recordedVideo!.path,
+  latitude: latitude!,
+  longitude: longitude!,
+);
+print(response);
 
     setState(() {
       isSubmitting = false;
