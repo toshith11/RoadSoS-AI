@@ -1,9 +1,13 @@
 from fastapi import APIRouter, UploadFile, File, Form
 import requests
-
+from datetime import datetime
 from data.storage import incidents
 from services.recommendation_service import get_recommendations
 from services.severity_booster import boost_severity
+import uuid
+from services.notification_service import contact_service
+
+
 
 router = APIRouter()
 
@@ -37,6 +41,7 @@ async def process_incident(
         data=data
     )
 
+
     if response.status_code != 200:
         return {
             "success": False,
@@ -44,6 +49,12 @@ async def process_incident(
         }
 
     ai_result = response.json()
+
+    if "severity" not in ai_result:
+        return {
+            "success": False,
+            "message": "Invalid AI Engine Response"
+            }
 
     # AI severity
     original_severity = ai_result["severity"]
@@ -61,56 +72,87 @@ async def process_incident(
         longitude
     )
 
+    contacts = []
+
+    for service in recommendation_data[
+        "recommended_services"
+        ]:
+        contacts.append(
+        contact_service(service)
+        )
+
     incident = {
 
-        "reporter_name": reporter_name,
+    "incident_id": str(uuid.uuid4()),
 
-        "latitude": latitude,
-        "longitude": longitude,
+    "timestamp": datetime.now().strftime(
+        "%Y-%m-%d %H:%M:%S"
+    ),
 
-        "filename": ai_result["filename"],
+    "status": "Pending",
 
-        "description": ai_result["description"],
+    "reporter_name": reporter_name,
 
-        "frames_extracted":
-            ai_result["frames_extracted"],
+    "latitude": latitude,
+    "longitude": longitude,
 
-        "predictions":
-            ai_result["predictions"],
+    "filename": ai_result["filename"],
 
-        "final_category":
-            ai_result["final_category"],
+    "thumbnail":
+        ai_result.get("thumbnail"),
 
-        "prediction_scores":
-            ai_result["prediction_scores"],
+    "description":
+        ai_result["description"],
 
-        "severity":
-            final_severity,
+    "frames_extracted":
+        ai_result["frames_extracted"],
 
-        "recommended_services":
-            recommendation_data["recommended_services"],
+    "predictions":
+        ai_result["predictions"],
 
-        "nearest_hospital":
-            recommendation_data.get(
-                "nearest_hospital"
-            ),
+    "final_category":
+        ai_result["final_category"],
 
-        "nearest_police_station":
-            recommendation_data.get(
-                "nearest_police_station"
-            ),
+    "prediction_scores":
+        ai_result["prediction_scores"],
 
-        "nearest_fire_station":
-            recommendation_data.get(
-                "nearest_fire_station"
-            ),
+    "confidence_score":
+        max(
+            ai_result["prediction_scores"].values()
+        ),
 
-        "nearest_trauma_center":
-            recommendation_data.get(
-                "nearest_trauma_center"
-            )
-    }
+    "ai_severity":
+        original_severity,
 
+    "severity":
+        final_severity,
+
+    "recommended_services":
+        recommendation_data[
+            "recommended_services"
+        ],
+
+    "nearest_hospital":
+        recommendation_data.get(
+            "nearest_hospital"
+        ),
+
+    "nearest_police_station":
+        recommendation_data.get(
+            "nearest_police_station"
+        ),
+
+    "nearest_fire_station":
+        recommendation_data.get(
+            "nearest_fire_station"
+        ),
+
+    "nearest_trauma_center":
+        recommendation_data.get(
+            "nearest_trauma_center"
+        ),
+        "contacts_notified": contacts
+}
     incidents.append(incident)
 
     print("\n========== NEW INCIDENT ==========")
