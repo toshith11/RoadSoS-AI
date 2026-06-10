@@ -6,6 +6,7 @@ from services.recommendation_service import get_recommendations
 from services.severity_booster import boost_severity
 import uuid
 from services.notification_service import contact_service
+from services.victim_detector import detect_victims
 
 
 
@@ -64,7 +65,8 @@ async def process_incident(
         original_severity,
         description
     )
-
+    
+    victims = detect_victims(description)
     # Get recommendations
     recommendation_data = get_recommendations(
         final_severity,
@@ -80,6 +82,11 @@ async def process_incident(
         contacts.append(
         contact_service(service)
         )
+    
+    if contacts:
+        status = "Resolved"
+    else:
+        status = "Pending"
 
     incident = {
 
@@ -89,7 +96,7 @@ async def process_incident(
         "%Y-%m-%d %H:%M:%S"
     ),
 
-    "status": "Pending",
+    "status": status,
 
     "reporter_name": reporter_name,
 
@@ -159,4 +166,15 @@ async def process_incident(
     print(incident)
     print("==================================\n")
 
-    return incident
+    return {
+
+    "success": True,
+
+    "severity": final_severity,
+
+    "victims_detected": victims,
+
+    "required_services":
+        recommendation_data["recommended_services"]
+
+}
