@@ -1,5 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
+from datetime import datetime
+from services.sos_db import save_sos_request
 
 from services.hospital_finder import find_nearest_hospital
 from services.police_finder import find_nearest_police
@@ -25,7 +27,7 @@ def send_sos(data: SOSRequest):
     assigned_service = None
 
     # Find nearest service
-    if service == "hospital":
+    if service == "ambulance":
 
         assigned_service = find_nearest_hospital(
             data.latitude,
@@ -43,7 +45,7 @@ def send_sos(data: SOSRequest):
 
         message = "Police request created"
 
-    elif service == "fire":
+    elif service == "fire force":
 
         assigned_service = find_nearest_firestation(
             data.latitude,
@@ -83,9 +85,29 @@ def send_sos(data: SOSRequest):
         assigned_service["lon"]
     )
 
+    save_sos_request({
+
+    "phone": data.phone,
+
+    "service": service,
+
+    "latitude": data.latitude,
+    "longitude": data.longitude,
+
+    "assigned_service":
+        assigned_service["name"],
+
+    "eta":
+        f"{eta} minutes",
+
+    "timestamp":
+        datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+})
+    
     return {
-        "success": True,
-        "message": message,
-        "eta": f"{eta} minutes",
-        "assigned_service": assigned_service["name"]
-    }
+    "success": True,
+    "message": message,
+    "eta": f"{eta} minutes"
+}

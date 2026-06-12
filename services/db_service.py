@@ -48,6 +48,78 @@ def init_db():
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS incidents (
+
+    incident_id TEXT PRIMARY KEY,
+
+    timestamp TEXT,
+
+    reporter_name TEXT,
+
+    latitude REAL,
+    longitude REAL,
+
+    victims INTEGER,               
+    
+    severity TEXT,
+
+    status TEXT,
+
+    description TEXT,
+
+    required_services TEXT
+    )
+    """)
+
+    cursor.execute("""
+CREATE TABLE IF NOT EXISTS sos_requests (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    phone TEXT,
+
+    service TEXT,
+
+    latitude REAL,
+    longitude REAL,
+
+    assigned_service TEXT,
+
+    eta TEXT,
+
+    timestamp TEXT
+)
+""")
+    
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    reporter_name TEXT UNIQUE,
+
+    points INTEGER DEFAULT 0,
+
+    reports INTEGER DEFAULT 0,
+
+    verified_reports INTEGER DEFAULT 0
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS rewards (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    reporter_name TEXT,
+
+    points INTEGER,
+
+    timestamp TEXT
+    )
+    """)
+
     conn.commit()
     conn.close()
 

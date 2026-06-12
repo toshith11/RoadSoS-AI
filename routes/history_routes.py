@@ -1,35 +1,55 @@
 from fastapi import APIRouter
-from data.storage import incidents
+import sqlite3
+import json
 
 router = APIRouter()
+
+DB_PATH = "database/emergency.db"
+
 
 @router.get("/incidentHistory")
 def incident_history():
 
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT *
+        FROM incidents
+        ORDER BY timestamp DESC
+    """)
+
+    rows = cursor.fetchall()
+
+    conn.close()
+
     history = []
 
-    for incident in incidents:
+    for row in rows:
 
         history.append({
 
             "incident_id":
-                incident["incident_id"],
+                row["incident_id"],
 
             "timestamp":
-                incident["timestamp"],
+                row["timestamp"],
 
             "severity":
-                incident["severity"],
+                row["severity"],
 
             "status":
-                incident["status"],
+                row["status"],
 
             "required_services":
-                incident["recommended_services"],
+                json.loads(
+                    row["required_services"]
+                ),
 
             "description":
-                incident["description"]
-
+                row["description"]
         })
 
     return history
