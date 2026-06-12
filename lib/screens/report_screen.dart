@@ -35,6 +35,7 @@ class _ReportScreenState extends State<ReportScreen> {
   bool isLocationFetched = false;
   double? latitude;
   double? longitude;
+  int injuredCount = 0;
 
   void showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -43,27 +44,36 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   Future<void> recordVideo() async {
-    try {
-      final XFile? video = await picker.pickVideo(
-        source: ImageSource.camera,
-        maxDuration: const Duration(seconds: 30),
-      );
+  try {
+    showMessage("Opening camera...");
 
-      if (video == null) {
-        showMessage("Video recording cancelled");
-        return;
-      }
+    final XFile? video = await picker.pickVideo(
+      source: ImageSource.camera,
+      maxDuration: const Duration(seconds: 15),
+    );
 
-      setState(() {
-        recordedVideo = video;
-        videoStatus = "Video recorded successfully ✓";
-      });
+    if (!mounted) return;
 
-      showMessage("Video recorded successfully");
-    } catch (e) {
-      showMessage("Camera access failed or not supported on this device");
+    if (video == null) {
+      showMessage("Video recording cancelled");
+      return;
     }
+
+    print("Video Path: ${video.path}");
+
+    setState(() {
+      recordedVideo = video;
+      videoStatus = "Video recorded successfully ✓";
+    });
+
+    showMessage("Video recorded successfully");
+
+  } catch (e) {
+    print("Camera Error: $e");
+
+    showMessage("Camera Error: $e");
   }
+}
 
   Future<void> fetchLocation() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -135,6 +145,7 @@ class _ReportScreenState extends State<ReportScreen> {
   videoPath: recordedVideo!.path,
   latitude: latitude!,
   longitude: longitude!,
+  injuredCount: injuredCount,
 );
 print(response);
     reporterName: "Citizen",
@@ -162,12 +173,21 @@ print(response);
       showMessage("Report submitted successfully! +50 Points");
 
       Navigator.push(
+<<<<<<< HEAD
   context,
   MaterialPageRoute(
     builder: (context) => AnalysisScreen(
       analysisData: response,
     ),
   ),
+=======
+        context,
+        MaterialPageRoute(
+         builder: (context) => AnalysisScreen(
+          analysisData: response,
+),
+        ),
+>>>>>>> 7764ec2 (Final Base Model from frontend)
       );
     } else {
       showMessage("Failed to submit report");
@@ -208,7 +228,7 @@ print(response);
             const SizedBox(height: 25),
             ReportCard(
               icon: Icons.videocam_rounded,
-              title: "Accident Video",
+              title: "Accident Video (Record upto complete 15sec)",
               subtitle: videoStatus,
               iconColor: rose,
               iconBgColor: const Color(0xFFF6E1E1),
@@ -220,6 +240,61 @@ print(response);
               color: blue,
               onTap: recordVideo,
             ),
+            const SizedBox(height: 20),
+
+Container(
+  padding: const EdgeInsets.all(16),
+  decoration: BoxDecoration(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(20),
+  ),
+  child: Column(
+    children: [
+      const Text(
+        "Number of Injured People",
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+
+      const SizedBox(height: 10),
+
+      Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: () {
+              if (injuredCount > 0) {
+                setState(() {
+                  injuredCount--;
+                });
+              }
+            },
+            icon: const Icon(Icons.remove_circle),
+          ),
+
+          Text(
+            injuredCount.toString(),
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          IconButton(
+            onPressed: () {
+              setState(() {
+                injuredCount++;
+              });
+            },
+            icon: const Icon(Icons.add_circle),
+          ),
+        ],
+      ),
+    ],
+  ),
+),
             const SizedBox(height: 25),
             const Text(
               "Accident Description",
@@ -235,7 +310,7 @@ print(response);
               maxLines: 5,
               decoration: InputDecoration(
                 hintText:
-                    "Example: A bike collided with a car. One person seems injured.",
+                    "Example: A bike collided with a car.",
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(

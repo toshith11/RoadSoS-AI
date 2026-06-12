@@ -20,15 +20,19 @@ class _SOSScreenState extends State<SOSScreen> {
   static const Color savePhoneColor = Color(0xFFB7A0C9);
   static const Color darkText = Color(0xFF3F3A37);
   static const Color lightText = Color(0xFF8B817C);
+
   final ApiService apiService = ApiService();
+  final TextEditingController phoneController = TextEditingController();
 
   String locationText = "Location not fetched yet";
   String phoneText = "Phone number not saved yet";
 
   bool isLocationFetched = false;
   bool isPhoneSaved = false;
+  bool isSending = false;
 
-  final TextEditingController phoneController = TextEditingController();
+  double? latitude;
+  double? longitude;
 
   @override
   void initState() {
@@ -40,13 +44,13 @@ class _SOSScreenState extends State<SOSScreen> {
     final prefs = await SharedPreferences.getInstance();
     final savedPhone = prefs.getString("phone");
 
-    setState(() {
-      if (savedPhone != null && savedPhone.isNotEmpty) {
+    if (savedPhone != null && savedPhone.isNotEmpty) {
+      setState(() {
         phoneText = "$savedPhone ✓";
         phoneController.text = savedPhone;
         isPhoneSaved = true;
-      }
-    });
+      });
+    }
   }
 
   Future<void> savePhoneNumber() async {
@@ -95,8 +99,12 @@ class _SOSScreenState extends State<SOSScreen> {
     final position = await Geolocator.getCurrentPosition();
 
     setState(() {
+      latitude = position.latitude;
+      longitude = position.longitude;
+
       locationText =
           "Lat: ${position.latitude.toStringAsFixed(5)}, Lng: ${position.longitude.toStringAsFixed(5)} ✓";
+
       isLocationFetched = true;
     });
 
@@ -104,26 +112,43 @@ class _SOSScreenState extends State<SOSScreen> {
   }
 
   Future<void> sendRequest(String service) async {
-  if (!isLocationFetched) {
-    showMessage("Please fetch location first");
-    return;
+    if (!isLocationFetched || latitude == null || longitude == null) {
+      showMessage("Please fetch location first");
+      return;
+    }
+
+    if (!isPhoneSaved) {
+      showMessage("Please save phone number first");
+      return;
+    }
+
+    setState(() {
+      isSending = true;
+    });
+
+    showMessage("Sending $service request...");
+
+    final response = await apiService.sendSOSRequest(
+  latitude: latitude!,
+  longitude: longitude!,
+  phone: phoneController.text.trim(),
+  service: service,
+);
+
+    setState(() {
+      isSending = false;
+    });
+
+    if (response["success"] == true) {
+      showMessage(
+        "${response["message"] ?? "$service request sent"}. ETA: ${response["eta"] ?? "Not available"}",
+      );
+    } else {
+      showMessage(
+        response["message"] ?? "Failed to send $service request",
+      );
+    }
   }
-
-  if (!isPhoneSaved) {
-    showMessage("Please save phone number first");
-    return;
-  }
-
-  showMessage("Sending $service request...");
-
-  final response = await apiService.sendSOSRequest(
-    location: locationText,
-    phone: phoneText,
-    service: service,
-  );
-
-  showMessage("${response["message"]}. ETA: ${response["eta"]}");
-}
 
   void editPhoneNumber() {
     setState(() {
@@ -267,6 +292,13 @@ class _SOSScreenState extends State<SOSScreen> {
 
             const SizedBox(height: 30),
 
+            if (isSending)
+              const Center(
+                child: CircularProgressIndicator(),
+              ),
+
+            if (isSending) const SizedBox(height: 20),
+
             HelpButton(
               text: "Request Ambulance",
               icon: Icons.local_hospital_rounded,
@@ -295,10 +327,10 @@ class _SOSScreenState extends State<SOSScreen> {
             const SizedBox(height: 14),
 
             HelpButton(
-              text: "Request All Services",
+              text: "Request Trauma",
               icon: Icons.warning_amber_rounded,
               color: allServiceColor,
-              onTap: () => sendRequest("All Services"),
+              onTap: () => sendRequest("Trauma"),
             ),
           ],
         ),
