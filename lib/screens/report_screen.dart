@@ -5,8 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'analysis_screen.dart';
 import '../services/api_service.dart';
-double? latitude;
-double? longitude;
+
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});
@@ -35,7 +34,7 @@ class _ReportScreenState extends State<ReportScreen> {
   bool isLocationFetched = false;
   double? latitude;
   double? longitude;
-  int injuredCount = 0;
+  int injured_count = 0;
 
   void showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -48,9 +47,8 @@ class _ReportScreenState extends State<ReportScreen> {
     showMessage("Opening camera...");
 
     final XFile? video = await picker.pickVideo(
-      source: ImageSource.camera,
-      maxDuration: const Duration(seconds: 15),
-    );
+  source: ImageSource.camera,
+);
 
     if (!mounted) return;
 
@@ -118,82 +116,71 @@ class _ReportScreenState extends State<ReportScreen> {
   }
 
   Future<void> submitReport() async {
-    if (recordedVideo == null) {
-      showMessage("Please record accident video first");
-      return;
-    }
+  if (recordedVideo == null) {
+    showMessage("Please record accident video first");
+    return;
+  }
 
-    if (descriptionController.text.trim().isEmpty) {
-      showMessage("Please add accident description");
-      return;
-    }
+  if (descriptionController.text.trim().isEmpty) {
+    showMessage("Please add accident description");
+    return;
+  }
 
-    if (!isLocationFetched) {
-      showMessage("Please fetch location");
-      return;
-    }
+  if (!isLocationFetched || latitude == null || longitude == null) {
+    showMessage("Please fetch location");
+    return;
+  }
 
-    setState(() {
-      isSubmitting = true;
-    });
+  setState(() {
+    isSubmitting = true;
+  });
 
-    showMessage("Submitting accident report...");
+  showMessage("Submitting accident report...");
 
-    final response = await apiService.submitAccidentReport(
-  reporterName: "Citizen Reporter",
-  description: descriptionController.text.trim(),
-  videoPath: recordedVideo!.path,
-  latitude: latitude!,
-  longitude: longitude!,
-  injuredCount: injuredCount,
-);
-print(response);
-    reporterName: "Citizen",
+  final response = await apiService.submitAccidentReport(
+    reporterName: "Citizen Reporter",
     description: descriptionController.text.trim(),
     videoPath: recordedVideo!.path,
     latitude: latitude!,
     longitude: longitude!,
-    );
+    injured_count: injured_count,
+  );
 
-    setState(() {
-      isSubmitting = false;
-    });
+  print(response);
 
-    if (response["success"] == true) {
-      final prefs = await SharedPreferences.getInstance();
+  if (!mounted) return;
 
-      final currentPoints = prefs.getInt("citizen_points") ?? 0;
-      final currentReports = prefs.getInt("reports_submitted") ?? 0;
-      final currentVerified = prefs.getInt("verified_reports") ?? 0;
+  setState(() {
+    isSubmitting = false;
+  });
 
-      await prefs.setInt("citizen_points", currentPoints + 50);
-      await prefs.setInt("reports_submitted", currentReports + 1);
-      await prefs.setInt("verified_reports", currentVerified + 1);
+  if (response["success"] == true || response["incident_id"] != null) {
+    final prefs = await SharedPreferences.getInstance();
 
-      showMessage("Report submitted successfully! +50 Points");
+    final currentPoints = prefs.getInt("citizen_points") ?? 0;
+    final currentReports = prefs.getInt("reports_submitted") ?? 0;
+    final currentVerified = prefs.getInt("verified_reports") ?? 0;
 
-      Navigator.push(
-<<<<<<< HEAD
-  context,
-  MaterialPageRoute(
-    builder: (context) => AnalysisScreen(
-      analysisData: response,
-    ),
-  ),
-=======
-        context,
-        MaterialPageRoute(
-         builder: (context) => AnalysisScreen(
+    await prefs.setInt("citizen_points", currentPoints + 50);
+    await prefs.setInt("reports_submitted", currentReports + 1);
+    await prefs.setInt("verified_reports", currentVerified + 1);
+
+    showMessage("Report submitted successfully! +50 Points");
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AnalysisScreen(
           analysisData: response,
-),
         ),
->>>>>>> 7764ec2 (Final Base Model from frontend)
-      );
-    } else {
-      showMessage("Failed to submit report");
-    }
+      ),
+    );
+  } else {
+    showMessage(
+      response["message"]?.toString() ?? "Failed to submit report",
+    );
   }
-
+}
   @override
   void dispose() {
     descriptionController.dispose();
@@ -228,7 +215,7 @@ print(response);
             const SizedBox(height: 25),
             ReportCard(
               icon: Icons.videocam_rounded,
-              title: "Accident Video (Record upto complete 15sec)",
+              title: "Accident Video ",
               subtitle: videoStatus,
               iconColor: rose,
               iconBgColor: const Color(0xFFF6E1E1),
@@ -265,9 +252,9 @@ Container(
         children: [
           IconButton(
             onPressed: () {
-              if (injuredCount > 0) {
+              if (injured_count > 0) {
                 setState(() {
-                  injuredCount--;
+                  injured_count--;
                 });
               }
             },
@@ -275,7 +262,7 @@ Container(
           ),
 
           Text(
-            injuredCount.toString(),
+            injured_count.toString(),
             style: const TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -285,7 +272,7 @@ Container(
           IconButton(
             onPressed: () {
               setState(() {
-                injuredCount++;
+                injured_count++;
               });
             },
             icon: const Icon(Icons.add_circle),
