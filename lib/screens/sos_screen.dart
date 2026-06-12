@@ -303,7 +303,7 @@ class _SOSScreenState extends State<SOSScreen> {
               text: "Request Ambulance",
               icon: Icons.local_hospital_rounded,
               color: ambulanceColor,
-              onTap: () => sendRequest("Ambulance"),
+              onTap: () => sendRequest("ambulance"),
             ),
 
             const SizedBox(height: 14),
@@ -312,7 +312,7 @@ class _SOSScreenState extends State<SOSScreen> {
               text: "Request Police",
               icon: Icons.local_police_rounded,
               color: policeColor,
-              onTap: () => sendRequest("Police"),
+              onTap: () => sendRequest("police"),
             ),
 
             const SizedBox(height: 14),
@@ -321,7 +321,7 @@ class _SOSScreenState extends State<SOSScreen> {
               text: "Request Fire Force",
               icon: Icons.local_fire_department_rounded,
               color: fireColor,
-              onTap: () => sendRequest("Fire Force"),
+              onTap: () => sendRequest("fire force"),
             ),
 
             const SizedBox(height: 14),
@@ -330,7 +330,7 @@ class _SOSScreenState extends State<SOSScreen> {
               text: "Request Trauma",
               icon: Icons.warning_amber_rounded,
               color: allServiceColor,
-              onTap: () => sendRequest("Trauma"),
+              onTap: () => sendRequest("trauma"),
             ),
           ],
         ),

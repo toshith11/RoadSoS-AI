@@ -2,136 +2,76 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-<<<<<<< HEAD
 
   // Replace with your backend IP
   static const String baseUrl =
-"http://172.25.63.22:8000";
+"http://10.237.111.22:8000";
 
   // ==========================
   // SUBMIT ACCIDENT REPORT
   // ==========================
 
   Future<Map<String, dynamic>> submitAccidentReport({
-    required String reporterName,
-    required String description,
-    required String videoPath,
-    required double latitude,
-    required double longitude,
-  }) async {
-
-=======
-  static const String baseUrl = "http://10.152.15.1:8000";
-
-  Future<Map<String, dynamic>> sendSOSRequest({
-  required double latitude,
-  required double longitude,
-  required String phone,
-  required String service,
-}) async {
-    try {
-      final response = await http.post(
-        Uri.parse("$baseUrl/sos"),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      body: jsonEncode({
-  "latitude": latitude,
-  "longitude": longitude,
-  "phone": phone,
-  "service": service,
-}),
-      );
-
-      if (response.statusCode == 200) {
-        return jsonDecode(response.body);
-      }
-
-      return {
-        "success": false,
-        "message": "SOS failed with status ${response.statusCode}",
-        "eta": "Not available",
-      };
-    } catch (e) {
-      return {
-        "success": false,
-        "message": "Backend connection failed",
-        "eta": "Not available",
-      };
-    }
-  }
-Future<Map<String, dynamic>> submitAccidentReport({
   required String reporterName,
   required String description,
   required String videoPath,
   required double latitude,
   required double longitude,
-  required int injuredCount,
+  required int injured_count,
 }) async {
->>>>>>> 7764ec2 (Final Base Model from frontend)
-    try {
+  try {
+    var request = http.MultipartRequest(
+      "POST",
+      Uri.parse("$baseUrl/processIncident"),
+    );
 
-      var request = http.MultipartRequest(
-        "POST",
-        Uri.parse("$baseUrl/processIncident"),
-      );
+    request.fields["reporter_name"] = reporterName;
+    request.fields["latitude"] = latitude.toString();
+    request.fields["longitude"] = longitude.toString();
+    request.fields["description"] = description;
+    request.fields["injured_count"] = injured_count.toString();
 
-      request.fields["reporter_name"] = reporterName;
-<<<<<<< HEAD
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        "video",
+        videoPath,
+      ),
+    );
 
-      request.fields["latitude"] =
-          latitude.toString();
+    print("Sending report data:");
+    print("reporter_name: $reporterName");
+    print("latitude: $latitude");
+    print("longitude: $longitude");
+    print("description: $description");
+    print("injured_count: $injured_count");
+    print("video: $videoPath");
 
-      request.fields["longitude"] =
-          longitude.toString();
+    final streamedResponse = await request.send().timeout(
+  const Duration(seconds: 90),
+);
 
-      request.fields["description"] =
-          description;
-=======
-      request.fields["description"] = description;
-      request.fields["latitude"] = latitude.toString();
-      request.fields["longitude"] = longitude.toString();
-      request.fields["injured_count"] =
-    injuredCount.toString();
->>>>>>> 7764ec2 (Final Base Model from frontend)
+    final response = await http.Response.fromStream(
+      streamedResponse,
+    );
 
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          "video",
-          videoPath,
-        ),
-      );
+    print("Report status: ${response.statusCode}");
+    print("Report body: ${response.body}");
 
-      final streamedResponse =
-          await request.send();
-
-      final response =
-          await http.Response.fromStream(
-            streamedResponse,
-          );
-
-      if (response.statusCode == 200) {
-
-        return jsonDecode(response.body);
-
-      } else {
-
-        return {
-          "success": false,
-          "message":
-              "Failed with status ${response.statusCode}"
-        };
-      }
-
-    } catch (e) {
-
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
       return {
         "success": false,
-        "message": e.toString()
+        "message": "Failed with status ${response.statusCode}",
       };
     }
+  } catch (e) {
+    return {
+      "success": false,
+      "message": e.toString(),
+    };
   }
-
+}
   // ==========================
   // INCIDENT HISTORY
   // ==========================
@@ -195,40 +135,50 @@ Future<Map<String, dynamic>> submitAccidentReport({
     }
   }
 
-<<<<<<< HEAD
   // ==========================
   // SOS API (Future)
   // ==========================
 
-  Future<Map<String, dynamic>> sendSOS({
-    required double latitude,
-    required double longitude,
-  }) async {
+ Future<Map<String, dynamic>> sendSOSRequest({
+  required double latitude,
+  required double longitude,
+  required String phone,
+  required String service,
+}) async {
+  try {
+    final response = await http.post(
+      Uri.parse("$baseUrl/sos"),
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "latitude": latitude,
+        "longitude": longitude,
+        "phone": phone,
+        "service": service,
+      }),
+    );
 
-    try {
+    print("SOS status: ${response.statusCode}");
+    print("SOS body: ${response.body}");
 
-      final response = await http.post(
-        Uri.parse("$baseUrl/sos"),
-        headers: {
-          "Content-Type":
-              "application/json"
-        },
-        body: jsonEncode({
-          "latitude": latitude,
-          "longitude": longitude,
-        }),
-      );
-
+    if (response.statusCode == 200) {
       return jsonDecode(response.body);
-
-    } catch (e) {
-
-      return {
-        "success": false,
-        "message": e.toString()
-      };
     }
-=======
+
+    return {
+      "success": false,
+      "message": "SOS failed with status ${response.statusCode}",
+      "eta": "Not available",
+    };
+  } catch (e) {
+    return {
+      "success": false,
+      "message": "Backend connection failed: $e",
+      "eta": "Not available",
+    };
+  }
+}
   Future<Map<String, dynamic>> getCitizenProfile() async {
   try {
     final response = await http.get(
@@ -248,7 +198,6 @@ Future<Map<String, dynamic>> submitAccidentReport({
       "success": false,
       "message": e.toString(),
     };
->>>>>>> 7764ec2 (Final Base Model from frontend)
   }
 }
 }
