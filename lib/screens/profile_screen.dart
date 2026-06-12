@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../services/api_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -9,6 +9,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  final ApiService apiService = ApiService();
   static const Color bgColor = Color(0xFFF7F4F2);
   static const Color rose = Color(0xFFD88C8C);
   static const Color blue = Color(0xFF7FA7C9);
@@ -17,9 +18,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   static const Color darkText = Color(0xFF3F3A37);
   static const Color lightText = Color(0xFF8B817C);
 
-  int points = 150;
-  int reports = 3;
-  int verifiedReports = 2;
+  
+
+  String name = "Citizen Reporter";
+  String level = "Beginner Helper";
+  int points = 0;
+  int reports = 0;
+  int verifiedReports = 0;
+  List<dynamic> badges = [];
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -28,21 +35,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> loadProfileData() async {
-    final prefs = await SharedPreferences.getInstance();
-
+    final response = await apiService.getCitizenProfile();
     setState(() {
-      points = prefs.getInt("citizen_points") ?? 0;
-      reports = prefs.getInt("reports_submitted") ?? 0;
-      verifiedReports = prefs.getInt("verified_reports") ?? 0;
-    });
-  }
+      isLoading = false;
 
-  String getLevel() {
-    if (points >= 1000) return "Emergency Hero";
-    if (points >= 500) return "Safety Champion";
-    if (points >= 300) return "Road Guardian";
-    if (points >= 100) return "Community Reporter";
-    return "Beginner Helper";
+      if (response["success"] == true) {
+        name = response["name"] ?? "Citizen Reporter";
+        points = response["points"] ?? 0;
+        level = response["level"] ?? "Beginner Helper";
+        reports = response["reports"] ?? 0;
+        verifiedReports = response["verifiedReports"] ?? 0;
+        badges = response["badges"] ?? [];
+      }
+    });
   }
 
   @override
@@ -61,107 +66,112 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(22),
-        child: Column(
-          children: [
-            const CircleAvatar(
-              radius: 50,
-              backgroundColor: rose,
-              child: Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 50,
-              ),
-            ),
-
-            const SizedBox(height: 15),
-
-            const Text(
-              "Citizen Reporter",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: darkText,
-              ),
-            ),
-
-            const SizedBox(height: 5),
-
-            Text(
-              getLevel(),
-              style: const TextStyle(
-                color: lightText,
-                fontSize: 16,
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            _buildStatCard(
-              "🏆 Total Points",
-              points.toString(),
-              amber,
-            ),
-
-            const SizedBox(height: 15),
-
-            _buildStatCard(
-              "📹 Reports Submitted",
-              reports.toString(),
-              blue,
-            ),
-
-            const SizedBox(height: 15),
-
-            _buildStatCard(
-              "🚨 Verified Reports",
-              verifiedReports.toString(),
-              sage,
-            ),
-
-            const SizedBox(height: 30),
-
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(22),
-              ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(22),
+              child: Column(
                 children: [
-                  Text(
-                    "🎖️ Badges",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  const CircleAvatar(
+                    radius: 50,
+                    backgroundColor: rose,
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: 50,
                     ),
                   ),
 
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
 
-                  ListTile(
-                    leading: Icon(Icons.verified),
-                    title: Text("Verified Reporter"),
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: darkText,
+                    ),
                   ),
 
-                  ListTile(
-                    leading: Icon(Icons.emergency),
-                    title: Text("First Responder"),
+                  const SizedBox(height: 5),
+
+                  Text(
+                    level,
+                    style: const TextStyle(
+                      color: lightText,
+                      fontSize: 16,
+                    ),
                   ),
 
-                  ListTile(
-                    leading: Icon(Icons.shield),
-                    title: Text("Road Guardian"),
+                  const SizedBox(height: 30),
+
+                  _buildStatCard(
+                    "🏆 Total Points",
+                    points.toString(),
+                    amber,
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  _buildStatCard(
+                    "📹 Reports Submitted",
+                    reports.toString(),
+                    blue,
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  _buildStatCard(
+                    "🚨 Verified Reports",
+                    verifiedReports.toString(),
+                    sage,
+                  ),
+
+                  const SizedBox(height: 30),
+
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "🎖️ Badges",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        const SizedBox(height: 15),
+
+                        if (badges.isEmpty)
+                          const Text(
+                            "No badges earned yet",
+                            style: TextStyle(
+                              color: lightText,
+                              fontSize: 15,
+                            ),
+                          )
+                        else
+                          ...badges.map(
+                            (badge) => ListTile(
+                              leading: const Icon(Icons.verified),
+                              title: Text(badge.toString()),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 

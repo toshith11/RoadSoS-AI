@@ -2,7 +2,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 class AnalysisScreen extends StatefulWidget {
-  const AnalysisScreen({super.key});
+
+  final Map<String, dynamic> analysisData;
+
+  const AnalysisScreen({
+    super.key,
+    required this.analysisData,
+  });
 
   @override
   State<AnalysisScreen> createState() => _AnalysisScreenState();
@@ -76,27 +82,27 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                     const SizedBox(height: 30),
 
                     ResultCard(
-                      title: "Severity",
-                      value: "HIGH",
-                      color: rose,
-                    ),
+  title: "Severity",
+  value: widget.analysisData["severity"].toString(),
+  color: rose,
+),
 
-                    const SizedBox(height: 15),
+const SizedBox(height: 15),
 
-                    ResultCard(
-                      title: "Victims Detected",
-                      value: "2",
-                      color: blue,
-                    ),
+ResultCard(
+  title: "Victims Detected",
+  value: widget.analysisData["victims_detected"].toString(),
+  color: blue,
+),
 
-                    const SizedBox(height: 15),
+const SizedBox(height: 15),
 
-                    ResultCard(
-                      title: "Required Services",
-                      value:
-                          "Ambulance\nPolice",
-                      color: amber,
-                    ),
+ResultCard(
+  title: "Required Services",
+  value: (widget.analysisData["required_services"] as List)
+      .join("\n"),
+  color: amber,
+),
                   ],
                 )
               : Column(

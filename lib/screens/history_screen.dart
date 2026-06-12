@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 
-class HistoryScreen extends StatelessWidget {
+class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
 
+  @override
+  State<HistoryScreen> createState() => _HistoryScreenState();
+}
+
+class _HistoryScreenState extends State<HistoryScreen> {
   static const Color bgColor = Color(0xFFF7F4F2);
   static const Color rose = Color(0xFFD88C8C);
   static const Color blue = Color(0xFF7FA7C9);
@@ -10,6 +16,64 @@ class HistoryScreen extends StatelessWidget {
   static const Color sage = Color(0xFF8FAF9B);
   static const Color darkText = Color(0xFF3F3A37);
   static const Color lightText = Color(0xFF8B817C);
+
+  final ApiService apiService = ApiService();
+
+  bool isLoading = true;
+  List<dynamic> incidents = [];
+
+  @override
+  void initState() {
+    super.initState();
+    loadHistory();
+  }
+
+  Future<void> loadHistory() async {
+    final data = await apiService.getIncidentHistory();
+
+    setState(() {
+      incidents = data;
+      isLoading = false;
+    });
+  }
+
+  String getServices(dynamic services) {
+    if (services == null) return "Not Available";
+
+    if (services is List) {
+      return services.join(" + ");
+    }
+
+    return services.toString();
+  }
+
+  Color getColor(String severity) {
+    final value = severity.toLowerCase();
+
+    if (value.contains("high") || value.contains("major")) {
+      return rose;
+    } else if (value.contains("medium")) {
+      return blue;
+    } else if (value.contains("fire")) {
+      return amber;
+    } else {
+      return sage;
+    }
+  }
+
+  IconData getIcon(String services) {
+    final value = services.toLowerCase();
+
+    if (value.contains("ambulance")) {
+      return Icons.local_hospital_rounded;
+    } else if (value.contains("police")) {
+      return Icons.local_police_rounded;
+    } else if (value.contains("fire")) {
+      return Icons.local_fire_department_rounded;
+    } else {
+      return Icons.report_problem_rounded;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,50 +91,65 @@ class HistoryScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(22),
-        children: const [
-          HistoryCard(
-            title: "Bike Accident Report",
-            date: "Today, 10:45 AM",
-            severity: "High Severity",
-            services: "Ambulance + Police",
-            status: "Emergency team notified",
-            color: rose,
-            icon: Icons.local_hospital_rounded,
-          ),
-          SizedBox(height: 16),
-          HistoryCard(
-            title: "Car Collision Report",
-            date: "Yesterday, 6:20 PM",
-            severity: "Medium Severity",
-            services: "Police",
-            status: "Report verified",
-            color: blue,
-            icon: Icons.local_police_rounded,
-          ),
-          SizedBox(height: 16),
-          HistoryCard(
-            title: "Roadside Fire Report",
-            date: "2 days ago, 8:10 PM",
-            severity: "High Severity",
-            services: "Fire Force + Police",
-            status: "Resolved",
-            color: amber,
-            icon: Icons.local_fire_department_rounded,
-          ),
-          SizedBox(height: 16),
-          HistoryCard(
-            title: "Minor Road Incident",
-            date: "Last week",
-            severity: "Low Severity",
-            services: "Under Review",
-            status: "No emergency dispatch required",
-            color: sage,
-            icon: Icons.report_problem_rounded,
-          ),
-        ],
-      ),
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : incidents.isEmpty
+              ? const Center(
+                  child: Text(
+                    "No incident history found",
+                    style: TextStyle(
+                      color: lightText,
+                      fontSize: 16,
+                    ),
+                  ),
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(22),
+                  itemCount: incidents.length,
+                  itemBuilder: (context, index) {
+                    final incident = incidents[index];
+
+                    final title =
+                        incident["description"]?.toString() ??
+                            "Accident Report";
+
+                    final date =
+                        incident["timestamp"]?.toString() ??
+                            "Date not available";
+
+                    final severity =
+                        incident["severity"]?.toString() ??
+                            incident["category"]?.toString() ??
+                            "Not Available";
+
+                    final services = getServices(
+                      incident["required_services"] ??
+                          incident["services"],
+                    );
+
+                    final status =
+                        incident["status"]?.toString() ??
+                            "Pending";
+
+                    final color = getColor(severity);
+                    final icon = getIcon(services);
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: HistoryCard(
+                        title: title,
+                        date: date,
+                        severity: severity,
+                        services: services,
+                        status: status,
+                        color: color,
+                        icon: icon,
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }
@@ -135,7 +214,10 @@ class HistoryCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(date, style: const TextStyle(color: lightText)),
+                Text(
+                  date,
+                  style: const TextStyle(color: lightText),
+                ),
                 const SizedBox(height: 12),
                 Text("Severity: $severity"),
                 Text("Services: $services"),
