@@ -1,47 +1,55 @@
 import sqlite3
 
-
 DB_PATH = "database/emergency.db"
 
 
 def save_sos_request(data):
 
-    conn = sqlite3.connect(DB_PATH)
+    try:
 
-    cursor = conn.cursor()
+        conn = sqlite3.connect(
+            DB_PATH,
+            timeout=30
+        )
 
-    cursor.execute("""
-    INSERT INTO sos_requests (
+        cursor = conn.cursor()
 
-        phone,
-        service,
+        cursor.execute("""
+        INSERT INTO sos_requests (
 
-        latitude,
-        longitude,
+            phone,
+            service,
 
-        assigned_service,
+            latitude,
+            longitude,
 
-        eta,
+            assigned_service,
 
-        timestamp
+            eta,
 
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (
+            timestamp
 
-        data["phone"],
-        data["service"],
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
 
-        data["latitude"],
-        data["longitude"],
+            data["phone"],
+            data["service"],
 
-        data["assigned_service"],
+            data["latitude"],
+            data["longitude"],
 
-        data["eta"],
+            data["assigned_service"],
 
-        data["timestamp"]
-    ))
+            data["eta"],
 
-    conn.commit()
+            data["timestamp"]
 
-    conn.close()
+        ))
+
+        conn.commit()
+
+    finally:
+
+        cursor.close()
+        conn.close()
