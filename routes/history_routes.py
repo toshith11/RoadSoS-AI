@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 import sqlite3
-import json
 
 router = APIRouter()
 
@@ -44,9 +43,9 @@ def incident_history():
                 row["status"],
 
             "required_services":
-                json.loads(
-                    row["required_services"]
-                ),
+                row["required_services"].split(",")
+                if row["required_services"]
+                else [],
 
             "description":
                 row["description"]
