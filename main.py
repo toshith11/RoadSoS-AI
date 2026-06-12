@@ -10,6 +10,7 @@ from routes.history_routes import router as history_router
 from routes.latest_incident_routes import router as latest_incident_router
 from routes.help_routes import router as help_router
 from routes.sos_routes import router as sos_router
+from routes.profile_routes import router as profile_router
 
 app = FastAPI(
     title="RoadSoS Backend",
@@ -37,6 +38,7 @@ app.include_router(ai_router)
 app.include_router(history_router)
 app.include_router(latest_incident_router)
 app.include_router(help_router)
+app.include_router(profile_router)
 app.include_router(sos_router)
 @app.get("/thumbnail")
 def get_thumbnail(path: str):

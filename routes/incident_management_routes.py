@@ -1,38 +1,72 @@
 from fastapi import APIRouter
-from data.storage import incidents
+import sqlite3
 
 router = APIRouter()
+
+DB_PATH = "database/emergency.db"
+
 
 @router.put("/acceptIncident/{incident_id}")
 def accept_incident(incident_id: str):
 
-    for incident in incidents:
+    conn = sqlite3.connect(DB_PATH)
 
-        if incident["incident_id"] == incident_id:
+    cursor = conn.cursor()
 
-            incident["status"] = "Accepted"
+    cursor.execute(
+        """
+        UPDATE incidents
+        SET status='Accepted'
+        WHERE incident_id=?
+        """,
+        (incident_id,)
+    )
 
-            return {
-                "message": "Incident Accepted"
-            }
+    conn.commit()
+
+    if cursor.rowcount == 0:
+
+        conn.close()
+
+        return {
+            "message": "Incident Not Found"
+        }
+
+    conn.close()
 
     return {
-        "message": "Incident Not Found"
+        "message": "Incident Accepted"
     }
+
 
 @router.put("/resolveIncident/{incident_id}")
 def resolve_incident(incident_id: str):
 
-    for incident in incidents:
+    conn = sqlite3.connect(DB_PATH)
 
-        if incident["incident_id"] == incident_id:
+    cursor = conn.cursor()
 
-            incident["status"] = "Resolved"
+    cursor.execute(
+        """
+        UPDATE incidents
+        SET status='Resolved'
+        WHERE incident_id=?
+        """,
+        (incident_id,)
+    )
 
-            return {
-                "message": "Incident Resolved"
-            }
+    conn.commit()
+
+    if cursor.rowcount == 0:
+
+        conn.close()
+
+        return {
+            "message": "Incident Not Found"
+        }
+
+    conn.close()
 
     return {
-        "message": "Incident Not Found"
+        "message": "Incident Resolved"
     }

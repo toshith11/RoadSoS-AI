@@ -1,38 +1,31 @@
 from fastapi import APIRouter
+from pydantic import BaseModel
+
 from data.storage import rewards
 
 router = APIRouter()
 
 
-def add_reward(username: str, points: int = 50):
-
-    # Check if user already exists
-    for user in rewards:
-
-        if user["username"] == username:
-
-            user["points"] += points
-
-            return user
-
-    # New user
-    new_user = {
-        "username": username,
-        "points": points
-    }
-
-    rewards.append(new_user)
-
-    return new_user
+class RewardRequest(BaseModel):
+    reporter_name: str
+    points: int
 
 
-@router.get("/leaderboard")
-def leaderboard():
+@router.post("/rewardUser")
+def reward_user(data: RewardRequest):
 
-    sorted_rewards = sorted(
-        rewards,
-        key=lambda x: x["points"],
-        reverse=True
+    rewards[data.reporter_name] = (
+        rewards.get(
+            data.reporter_name,
+            0
+        )
+        + data.points
     )
 
-    return sorted_rewards
+    return {
+        "success": True,
+        "reporter_name":
+            data.reporter_name,
+        "total_points":
+            rewards[data.reporter_name]
+    }

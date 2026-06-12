@@ -6,7 +6,7 @@ from services.recommendation_service import get_recommendations
 from services.severity_booster import boost_severity
 import uuid
 from services.notification_service import contact_service
-from services.victim_detector import detect_victims
+from services.incident_db import save_incident
 
 
 
@@ -20,6 +20,7 @@ async def process_incident(
     reporter_name: str = Form(...),
     latitude: float = Form(...),
     longitude: float = Form(...),
+    injured_count: int = Form(...),
     video: UploadFile = File(...),
     description: str = Form(...)
 ):
@@ -66,7 +67,7 @@ async def process_incident(
         description
     )
     
-    victims = detect_victims(description)
+    
     # Get recommendations
     recommendation_data = get_recommendations(
         final_severity,
@@ -104,6 +105,8 @@ async def process_incident(
     "longitude": longitude,
 
     "filename": ai_result["filename"],
+
+    "victims": injured_count,
 
     "thumbnail":
         ai_result.get("thumbnail"),
@@ -160,21 +163,16 @@ async def process_incident(
         ),
         "contacts_notified": contacts
 }
-    incidents.append(incident)
+    save_incident(incident)
 
     print("\n========== NEW INCIDENT ==========")
     print(incident)
     print("==================================\n")
 
     return {
-
     "success": True,
-
     "severity": final_severity,
-
-    "victims_detected": victims,
-
+    "victims_detected": injured_count,
     "required_services":
         recommendation_data["recommended_services"]
-
 }
